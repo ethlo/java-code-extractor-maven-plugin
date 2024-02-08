@@ -9,9 +9,9 @@ package com.ethlo.maven.codeextractor;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,7 @@ package com.ethlo.maven.codeextractor;
  * #L%
  */
 
-import java.io.IOException;
+import java.io.File;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.maven.plugin.MojoFailureException;
@@ -33,22 +33,21 @@ import org.junit.jupiter.api.Test;
 public class AppTest
 {
     @Test
-    public void smokeTest() throws IllegalAccessException, IOException
+    public void smokeTest() throws IllegalAccessException, MojoFailureException
     {
-        final MavenProject project = new MavenProject();
+        final MavenProject project = new MavenProject()
+        {
+            @Override
+            public File getBasedir()
+            {
+                return new File("");
+            }
+        };
 
         final ExtractMojo mojo = new ExtractMojo();
         FieldUtils.writeField(mojo, "sources", new String[]{"src/test/java/samples"}, true);
         FieldUtils.writeField(mojo, "template", "src/test/resources/sample-renderer.html", true);
         FieldUtils.writeField(mojo, "project", project, true);
-        try
-        {
-            mojo.execute();
-            System.out.println(project.getProperties().getProperty("src/test/java/samples"));
-        }
-        catch (MojoFailureException expected)
-        {
-
-        }
+        mojo.execute();
     }
 }

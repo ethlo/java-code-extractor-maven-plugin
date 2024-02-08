@@ -22,14 +22,12 @@ package com.ethlo.maven.codeextractor;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.AbstractMojo;
@@ -40,9 +38,12 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
+import com.github.javaparser.Problem;
+import com.github.javaparser.Range;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.comments.Comment;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.visitor.ModifierVisitor;
@@ -86,54 +87,85 @@ public class ExtractMojo extends AbstractMojo
         {
             getLog().info("Processing source '" + source + "'");
             final SourceRoot sourceRoot = new SourceRoot(project.getBasedir().toPath().resolve(source));
-            try (final Stream<Path> files = Files.list(sourceRoot.getRoot()))
-            {
-                files
-                        .filter(Files::isRegularFile)
-                        .filter(f -> f.getFileName().toString().endsWith(".java"))
-                        .forEach(javaFile -> sourceRoot.add(sourceRoot.parse("", javaFile.toString())));
-            }
-            catch (IOException exc)
-            {
-                throw new MojoFailureException(exc);
-            }
-
-            final List<MethodDeclaration> methods = sourceRoot.getCompilationUnits()
-                    .stream()
-                    .flatMap(cu -> visitCu(cu).stream())
-                    .toList();
-            final StringWriter sw = new StringWriter();
+            List<CompilationUnit> compilationUnits;
             try
             {
-                getLog().info("Found " + methods.size() + " methods");
-                compiledTemplate.evaluate(sw, Map.of("methods", process(methods)));
-                project.getProperties().setProperty(source, sw.toString());
+                compilationUnits = sourceRoot.tryToParse().stream()
+                        .map(pr ->
+                        {
+                            if (pr.isSuccessful())
+                            {
+                                return pr.getResult().orElse(null);
+                            }
+                            else
+                            {
+                                getLog().warn("Parse problem for " + source + ": "
+                                        + String.join(", ", pr.getProblems().stream().map(Problem::toString).toList()));
+                                return null;
+                            }
+                        })
+                        .filter(Objects::nonNull)
+                        .toList();
             }
             catch (IOException e)
             {
                 throw new MojoFailureException(e);
             }
+
+            final List<MethodDeclaration> methods = compilationUnits
+                    .stream()
+                    .flatMap(cu -> visitCu(cu).stream())
+                    .toList();
+
+            if (!methods.isEmpty())
+            {
+                final StringWriter sw = new StringWriter();
+
+                final TypeDeclaration<?> typeDeclaration = (TypeDeclaration<?>) methods.get(0).getParentNode().orElseThrow();
+                final String className = typeDeclaration.getName().asString();
+
+                try
+                {
+                    getLog().info("Found " + methods.size() + " methods");
+                    compiledTemplate.evaluate(sw, Map.of("class", new ClassInfo(className, cleanComment(typeDeclaration.getComment().orElse(null)), source),
+                            "methods", methods.stream().map(this::processMethod).toList()
+                    ));
+                    project.getProperties().setProperty(source, sw.toString());
+                    if (getLog().isDebugEnabled())
+                    {
+                        getLog().debug("Render result for " + source + ": " + sw);
+                    }
+                }
+                catch (IOException e)
+                {
+                    throw new MojoFailureException(e);
+                }
+            }
+            else
+            {
+                getLog().warn("No methods found in " + source);
+            }
         }
     }
 
-    private List<ExampleInfo> process(List<MethodDeclaration> methods)
+    private MethodInfo processMethod(MethodDeclaration methodDeclaration)
     {
-        return methods.stream().map(this::processMethod).toList();
-    }
-
-    private ExampleInfo processMethod(MethodDeclaration methodDeclaration)
-    {
-        final String description = methodDeclaration.getComment()
-                .map(Comment::getContent)
-                .map(StringUtils::normalizeSpace)
-                .orElse(null);
+        final String description = cleanComment(methodDeclaration.getComment().orElse(null));
 
         final String body = methodDeclaration.getBody()
                 .map(BlockStmt::getStatements)
                 .map(statements -> String.join("\n", statements.stream().map(Node::toString).collect(Collectors.joining("\n"))))
                 .orElse(null);
 
-        return new ExampleInfo(methodDeclaration.getName().asString(), description, body);
+        return new MethodInfo(methodDeclaration.getName().asString(), description, body, methodDeclaration.getRange().orElse(null));
+    }
+
+    private static String cleanComment(Comment comment)
+    {
+        return Optional.ofNullable(comment)
+                .map(Comment::getContent)
+                //.map(StringUtils::normalizeSpace)
+                .orElse(null);
     }
 
     private List<MethodDeclaration> visitCu(CompilationUnit cu)
@@ -151,8 +183,11 @@ public class ExtractMojo extends AbstractMojo
         return declarations;
     }
 
-    public record ExampleInfo(String name, String description, String body)
+    public record MethodInfo(String name, String description, String body, Range range)
     {
+    }
 
+    public record ClassInfo(String name, String description, String path)
+    {
     }
 }
