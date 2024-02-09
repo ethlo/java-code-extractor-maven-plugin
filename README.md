@@ -26,7 +26,7 @@ The `pom.xml` resources section (must be filtered) so that you can include snipp
             <plugin>
                 <groupId>com.ethlo.maven</groupId>
                 <artifactId>java-code-extractor-maven-plugin</artifactId>
-                <version>0.1.0</version>
+                <version>0.2.0</version>
                 <configuration>
                     <template>src/site/sample-code.template.md</template>
                     <sources>
