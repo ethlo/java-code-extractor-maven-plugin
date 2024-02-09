@@ -1,4 +1,4 @@
-package com.ethlo.maven.codeextractor;
+package com.ethlo.maven.extractor;
 
 /*-
  * #%L
@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Unit test for simple App.
  */
-public class AppTest
+public class SmokeTest
 {
     @Test
     public void smokeTest() throws IllegalAccessException, MojoFailureException
@@ -44,9 +44,9 @@ public class AppTest
             }
         };
 
-        final ExtractMojo mojo = new ExtractMojo();
+        final ExtractJavaMojo mojo = new ExtractJavaMojo();
         FieldUtils.writeField(mojo, "sources", new String[]{"src/test/java/samples"}, true);
-        FieldUtils.writeField(mojo, "template", "src/test/resources/sample-renderer.html", true);
+        FieldUtils.writeField(mojo, "template", "src/test/resources/github.template.md", true);
         FieldUtils.writeField(mojo, "project", project, true);
         mojo.execute();
     }

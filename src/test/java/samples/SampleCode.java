@@ -37,6 +37,8 @@ public class SampleCode
 
     /*
      <p>Description of the cool feature B goes here!</p>
+
+     and some more here
      */
     void showOffFeatureB()
     {

@@ -3,10 +3,10 @@
          xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.ethlo.maven</groupId>
-    <artifactId>java-code-extractor-maven-plugin</artifactId>
-    <name>java-code-extractor-maven-plugin</name>
-    <version>1.0.0-SNAPSHOT</version>
+    <groupId>com.ethlo.documentation</groupId>
+    <artifactId>source-extractor-maven-plugin</artifactId>
+    <name>source-extractor-maven-plugin</name>
+    <version>0.1.0</version>
     <packaging>maven-plugin</packaging>
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -14,7 +14,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <gpg.skip>true</gpg.skip>
     </properties>
-    <url>https://github.com/ethlo/java-code-extractor-maven-plugin</url>
+    <url>https://github.com/ethlo/source-extractor-maven-plugin</url>
     <developers>
         <developer>
             <name>Morten Haraldsen</name>
@@ -177,6 +177,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.12.1</version>
                 <configuration>
                     <source>17</source>
                     <target>17</target>
@@ -191,9 +192,9 @@
         </license>
     </licenses>
     <scm>
-        <url>https://github.com:ethlo/java-code-extractor-maven-plugin</url>
-        <connection>scm:git:git@github.com:ethlo/java-code-extractor-maven-plugin.git</connection>
-        <developerConnection>scm:git:git@github.com:ethlo/java-code-extractor-maven-plugin.git</developerConnection>
+        <url>https://github.com:ethlo/source-extractor-maven-plugin</url>
+        <connection>scm:git:git@github.com:ethlo/source-extractor-maven-plugin.git</connection>
+        <developerConnection>scm:git:git@github.com:ethlo/source-extractor-maven-plugin.git</developerConnection>
     </scm>
     <distributionManagement>
         <repository>
@@ -220,14 +221,22 @@
             <version>3.2.2</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.14.0</version>
+        </dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <version>1.7.36</version>
         </dependency>
+
+        <!-- Provided -->
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-plugin-api</artifactId>
             <version>3.9.3</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.maven.plugin-tools</groupId>
@@ -239,6 +248,7 @@
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-core</artifactId>
             <version>3.9.3</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- TEST -->

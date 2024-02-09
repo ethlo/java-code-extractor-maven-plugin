@@ -1,4 +1,4 @@
-package com.ethlo.maven.codeextractor;
+package com.ethlo.maven.extractor;
 
 /*-
  * #%L
@@ -52,8 +52,11 @@ import com.github.javaparser.utils.SourceRoot;
 import io.pebbletemplates.pebble.PebbleEngine;
 import io.pebbletemplates.pebble.template.PebbleTemplate;
 
+/**
+ * Extractor for Java source files
+ */
 @Mojo(threadSafe = true, name = "extract", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
-public class ExtractMojo extends AbstractMojo
+public class ExtractJavaMojo extends AbstractMojo
 {
     @Parameter(required = true, property = "sources")
     private String[] sources;
@@ -85,7 +88,7 @@ public class ExtractMojo extends AbstractMojo
 
         for (String source : sources)
         {
-            getLog().info("Processing source '" + source + "'");
+            getLog().info("Processing source '" + source + "' using template " + template);
             final SourceRoot sourceRoot = new SourceRoot(project.getBasedir().toPath().resolve(source));
             List<CompilationUnit> compilationUnits;
             try
@@ -164,7 +167,9 @@ public class ExtractMojo extends AbstractMojo
     {
         return Optional.ofNullable(comment)
                 .map(Comment::getContent)
-                //.map(StringUtils::normalizeSpace)
+                .map(s->s.replace("\n", "[_NL_]"))
+                .map(StringUtils::normalizeSpace)
+                .map(s->s.replace("[_NL_]", "\n"))
                 .orElse(null);
     }
 
@@ -183,10 +188,16 @@ public class ExtractMojo extends AbstractMojo
         return declarations;
     }
 
+    /**
+     * Holder of data for methods
+     */
     public record MethodInfo(String name, String description, String body, Range range)
     {
     }
 
+    /**
+     * Holder of data for the class
+     */
     public record ClassInfo(String name, String description, String path)
     {
     }
