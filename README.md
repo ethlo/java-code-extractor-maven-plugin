@@ -2,6 +2,8 @@
 
 An opinionated little tool to extract code samples for inclusion in HTML or markdown to avoid maintaining example code separately from tests.
 
+An example can be seen here: https://github.com/ethlo/itu/?tab=readme-ov-file#parsing
+
 Standing on the shoulders of these awesome projects:
 * https://github.com/javaparser/javaparser
 * https://github.com/PebbleTemplates/pebble
