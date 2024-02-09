@@ -20,6 +20,7 @@ package samples;
  * #L%
  */
 
+import java.util.Arrays;
 import java.util.List;
 
 public class SampleCode
@@ -29,7 +30,7 @@ public class SampleCode
      */
     void showOffFeatureA()
     {
-        final List<String> list = List.of("something", "cool");
+        final List<String> list = Arrays.asList("something", "cool");
 
         assert list.size() == 2;
         assert list != null;
@@ -42,7 +43,7 @@ public class SampleCode
      */
     void showOffFeatureB()
     {
-        final List<String> list = List.of("something", "else", "cool");
+        final List<String> list = Arrays.asList("something", "else", "cool");
 
         assert list.size() == 2;
         assert list != null;

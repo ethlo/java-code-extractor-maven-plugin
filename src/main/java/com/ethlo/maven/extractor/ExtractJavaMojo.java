@@ -23,6 +23,7 @@ package com.ethlo.maven.extractor;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -103,12 +104,12 @@ public class ExtractJavaMojo extends AbstractMojo
                             else
                             {
                                 getLog().warn("Parse problem for " + source + ": "
-                                        + String.join(", ", pr.getProblems().stream().map(Problem::toString).toList()));
+                                        + pr.getProblems().stream().map(Problem::toString).collect(Collectors.joining(", ")));
                                 return null;
                             }
                         })
                         .filter(Objects::nonNull)
-                        .toList();
+                        .collect(Collectors.toList());
             }
             catch (IOException e)
             {
@@ -118,21 +119,22 @@ public class ExtractJavaMojo extends AbstractMojo
             final List<MethodDeclaration> methods = compilationUnits
                     .stream()
                     .flatMap(cu -> visitCu(cu).stream())
-                    .toList();
+                    .collect(Collectors.toList());
 
             if (!methods.isEmpty())
             {
                 final StringWriter sw = new StringWriter();
 
-                final TypeDeclaration<?> typeDeclaration = (TypeDeclaration<?>) methods.get(0).getParentNode().orElseThrow();
+                final TypeDeclaration<?> typeDeclaration = (TypeDeclaration<?>) methods.get(0).getParentNode().orElseThrow(() -> new IllegalArgumentException("Found no parent for method"));
                 final String className = typeDeclaration.getName().asString();
 
                 try
                 {
                     getLog().info("Found " + methods.size() + " methods");
-                    compiledTemplate.evaluate(sw, Map.of("class", new ClassInfo(className, cleanComment(typeDeclaration.getComment().orElse(null)), source),
-                            "methods", methods.stream().map(this::processMethod).toList()
-                    ));
+                    final Map<String, Object> model = new HashMap<>();
+                    model.put("class", new ClassInfo(className, cleanComment(typeDeclaration.getComment().orElse(null)), source));
+                    model.put("methods", methods.stream().map(this::processMethod).collect(Collectors.toList()));
+                    compiledTemplate.evaluate(sw, model);
                     project.getProperties().setProperty(source, sw.toString());
                     if (getLog().isDebugEnabled())
                     {
@@ -167,9 +169,9 @@ public class ExtractJavaMojo extends AbstractMojo
     {
         return Optional.ofNullable(comment)
                 .map(Comment::getContent)
-                .map(s->s.replace("\n", "[_NL_]"))
+                .map(s -> s.replace("\n", "[_NL_]"))
                 .map(StringUtils::normalizeSpace)
-                .map(s->s.replace("[_NL_]", "\n"))
+                .map(s -> s.replace("[_NL_]", "\n"))
                 .orElse(null);
     }
 
@@ -191,14 +193,71 @@ public class ExtractJavaMojo extends AbstractMojo
     /**
      * Holder of data for methods
      */
-    public record MethodInfo(String name, String description, String body, Range range)
+    public class MethodInfo
     {
+        private final String name;
+        private final String description;
+        private final String body;
+        private final Range range;
+
+        public MethodInfo(String name, String description, String body, Range range)
+        {
+            this.name = name;
+            this.description = description;
+            this.body = body;
+            this.range = range;
+        }
+
+        public String getName()
+        {
+            return name;
+        }
+
+        public String getDescription()
+        {
+            return description;
+        }
+
+        public String getBody()
+        {
+            return body;
+        }
+
+        public Range getRange()
+        {
+            return range;
+        }
     }
 
     /**
      * Holder of data for the class
      */
-    public record ClassInfo(String name, String description, String path)
+    public class ClassInfo
     {
+        private final String name;
+        private final String description;
+        private final String path;
+
+        public ClassInfo(String name, String description, String path)
+        {
+            this.name = name;
+            this.description = description;
+            this.path = path;
+        }
+
+        public String getName()
+        {
+            return name;
+        }
+
+        public String getDescription()
+        {
+            return description;
+        }
+
+        public String getPath()
+        {
+            return path;
+        }
     }
 }
