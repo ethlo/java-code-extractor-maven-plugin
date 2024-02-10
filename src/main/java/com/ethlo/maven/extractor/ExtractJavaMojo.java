@@ -39,16 +39,18 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
+import com.github.javaparser.ParserConfiguration;
+import com.github.javaparser.Position;
 import com.github.javaparser.Problem;
 import com.github.javaparser.Range;
 import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.comments.Comment;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.visitor.ModifierVisitor;
 import com.github.javaparser.ast.visitor.Visitable;
+import com.github.javaparser.printer.lexicalpreservation.LexicalPreservingPrinter;
 import com.github.javaparser.utils.SourceRoot;
 import io.pebbletemplates.pebble.PebbleEngine;
 import io.pebbletemplates.pebble.template.PebbleTemplate;
@@ -89,8 +91,12 @@ public class ExtractJavaMojo extends AbstractMojo
 
         for (String source : sources)
         {
+            final ParserConfiguration config = new ParserConfiguration();
+            config.setLexicalPreservationEnabled(true);
+
             getLog().info("Processing source '" + source + "' using template " + template);
-            final SourceRoot sourceRoot = new SourceRoot(project.getBasedir().toPath().resolve(source));
+            final SourceRoot sourceRoot = new SourceRoot(project.getBasedir().toPath().resolve(source), config);
+            sourceRoot.setPrinter(LexicalPreservingPrinter::print);
             List<CompilationUnit> compilationUnits;
             try
             {
@@ -156,22 +162,38 @@ public class ExtractJavaMojo extends AbstractMojo
     private MethodInfo processMethod(MethodDeclaration methodDeclaration)
     {
         final String description = cleanComment(methodDeclaration.getComment().orElse(null));
+        final String body = getBody(methodDeclaration);
+        return new MethodInfo(methodDeclaration.getName().asString(), description, body, getRange(methodDeclaration));
+    }
 
-        final String body = methodDeclaration.getBody()
+    private Range getRange(MethodDeclaration methodDeclaration)
+    {
+        Position start = methodDeclaration.getRange().orElseThrow(() -> new IllegalArgumentException("No range info for method")).begin;
+        if (methodDeclaration.getComment().isPresent())
+        {
+            start = methodDeclaration.getComment().get().getRange().orElseThrow(() -> new IllegalArgumentException("No range info for comment")).begin;
+        }
+        return new Range(start, methodDeclaration.getRange().get().end);
+    }
+
+    private static String getBody(MethodDeclaration methodDeclaration)
+    {
+        return methodDeclaration.getBody()
                 .map(BlockStmt::getStatements)
-                .map(statements -> String.join("\n", statements.stream().map(Node::toString).collect(Collectors.joining("\n"))))
+                .map(statements -> statements.stream()
+                        .map(LexicalPreservingPrinter::print)
+                        .collect(Collectors.joining("\n")))
                 .orElse(null);
-
-        return new MethodInfo(methodDeclaration.getName().asString(), description, body, methodDeclaration.getRange().orElse(null));
     }
 
     private static String cleanComment(Comment comment)
     {
+        final String nl = "[_NL_]";
         return Optional.ofNullable(comment)
                 .map(Comment::getContent)
-                .map(s -> s.replace("\n", "[_NL_]"))
+                .map(s -> s.replace("\n", nl))
                 .map(StringUtils::normalizeSpace)
-                .map(s -> s.replace("[_NL_]", "\n"))
+                .map(s -> s.replace(nl, "\n"))
                 .orElse(null);
     }
 
@@ -193,7 +215,7 @@ public class ExtractJavaMojo extends AbstractMojo
     /**
      * Holder of data for methods
      */
-    public class MethodInfo
+    public static class MethodInfo
     {
         private final String name;
         private final String description;
@@ -232,7 +254,7 @@ public class ExtractJavaMojo extends AbstractMojo
     /**
      * Holder of data for the class
      */
-    public class ClassInfo
+    public static class ClassInfo
     {
         private final String name;
         private final String description;
