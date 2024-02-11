@@ -29,7 +29,7 @@ The `pom.xml` resources section (must be filtered) so that you can include snipp
             <plugin>
                 <groupId>com.ethlo.documentation</groupId>
                 <artifactId>source-extractor-maven-plugin</artifactId>
-                <version>0.3.0</version>
+                <version>${project.version}</version>
                 <configuration>
                     <template>src/main/site/github.template.md</template>
                     <sources>
@@ -52,11 +52,11 @@ The `pom.xml` resources section (must be filtered) so that you can include snipp
             </resource>
             <resource>
                 <filtering>true</filtering>
-                <directory>${project.basedir}/src/main/site</directory>
+                <directory>\${project.basedir}/src/main/site</directory>
                 <includes>
                     <include>README.md</include>
                 </includes>
-                <targetPath>${project.basedir}</targetPath>
+                <targetPath>\${project.basedir}</targetPath>
             </resource>
         </resources>
     </build>
@@ -64,31 +64,6 @@ The `pom.xml` resources section (must be filtered) so that you can include snipp
 ```
 ### Extracted samples
 
-
-
-#### showOffFeatureA <span style="font-weight: normal">[&raquo; source](src/test/java/samples/SampleCode.java#L28C5-L37C6)</span>
-
-<p>Description of the cool feature A goes here!</p>
-
-```java
-final List<String> list = Arrays.asList("something", "cool");
-assert list.size() == 2;
-assert list != null;
-```
-
-
-#### showOffFeatureB <span style="font-weight: normal">[&raquo; source](src/test/java/samples/SampleCode.java#L39C5-L50C6)</span>
-
-Description of the cool feature B goes here!
-
- And some more here!
-
-```java
-final List<String> list = Arrays.asList("something", "else", "cool");
-assert list.size() == 2;
-assert list != null;
-```
-
-
+${src/test/java/samples}
 
 

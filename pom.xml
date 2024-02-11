@@ -203,20 +203,28 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <configuration>
+                    <resources>
+                        <resource>
+                            <directory>src/main/resources</directory>
+                        </resource>
+                        <resource>
+                            <filtering>true</filtering>
+                            <directory>${project.basedir}/src/main/site</directory>
+                            <includes>
+                                <include>README.md</include>
+                            </includes>
+                            <targetPath>${project.basedir}</targetPath>
+                        </resource>
+                    </resources>
+                    <escapeString>\</escapeString>
+                </configuration>
+            </plugin>
         </plugins>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-            </resource>
-            <resource>
-                <filtering>true</filtering>
-                <directory>${project.basedir}/src/main/site</directory>
-                <includes>
-                    <include>README.md</include>
-                </includes>
-                <targetPath>${project.basedir}</targetPath>
-            </resource>
-        </resources>
     </build>
     <licenses>
         <license>
