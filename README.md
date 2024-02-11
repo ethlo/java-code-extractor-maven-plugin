@@ -1,5 +1,8 @@
 ### source-extractor-maven-plugin
 
+[![Maven Central](https://img.shields.io/maven-central/v/com.ethlo.documentation/source-extractor-maven-plugin.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.ethlo.time%22%20a%3A%22itu%22)
+[![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)](LICENSE)
+
 An opinionated little tool to extract code samples for inclusion in HTML or markdown to avoid maintaining example code separately from tests.
 
 An example can be seen here: https://github.com/ethlo/itu/?tab=readme-ov-file#parsing
@@ -24,13 +27,13 @@ The `pom.xml` resources section (must be filtered) so that you can include snipp
     <build>
         <plugins>
             <plugin>
-                <groupId>com.ethlo.maven</groupId>
-                <artifactId>java-code-extractor-maven-plugin</artifactId>
-                <version>0.2.0</version>
+                <groupId>com.ethlo.documentation</groupId>
+                <artifactId>source-extractor-maven-plugin</artifactId>
+                <version>0.3.0</version>
                 <configuration>
-                    <template>src/site/sample-code.template.md</template>
+                    <template>src/site/github.template.md</template>
                     <sources>
-                        <source>src/test/java/mysamples</source>
+                        <source>src/test/java/samples</source>
                     </sources>
                 </configuration>
                 <executions>
@@ -49,14 +52,43 @@ The `pom.xml` resources section (must be filtered) so that you can include snipp
             </resource>
             <resource>
                 <filtering>true</filtering>
-                <directory>${project.basedir}/src/site</directory>
+                <directory>/home/morten/dev/ethlo/sample-code-extractor/src/site</directory>
                 <includes>
                     <include>README.md</include>
                 </includes>
-                <targetPath>${project.basedir}</targetPath>
+                <targetPath>/home/morten/dev/ethlo/sample-code-extractor</targetPath>
             </resource>
         </resources>
     </build>
 </project>
 ```
+### Extracted samples
+
+
+
+#### showOffFeatureA <span style="font-weight: normal">[&raquo; source](src/test/java/samples/SampleCode.java#L28C5-L37C6)</span>
+
+<p>Description of the cool feature A goes here!</p>
+
+```java
+final List<String> list = Arrays.asList("something", "cool");
+assert list.size() == 2;
+assert list != null;
+```
+
+
+#### showOffFeatureB <span style="font-weight: normal">[&raquo; source](src/test/java/samples/SampleCode.java#L39C5-L50C6)</span>
+
+Description of the cool feature B goes here!
+
+ And some more here!
+
+```java
+final List<String> list = Arrays.asList("something", "else", "cool");
+assert list.size() == 2;
+assert list != null;
+```
+
+
+
 

@@ -37,9 +37,9 @@ public class SampleCode
     }
 
     /*
-     <p>Description of the cool feature B goes here!</p>
+     Description of the cool feature B goes here!
 
-     and some more here
+     And some more here!
      */
     void showOffFeatureB()
     {

@@ -184,7 +184,39 @@
                     <target>1.8</target>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>com.ethlo.documentation</groupId>
+                <artifactId>source-extractor-maven-plugin</artifactId>
+                <version>0.3.0</version>
+                <configuration>
+                    <template>${project.basedir}/src/main/site/github.template.md</template>
+                    <sources>
+                        <source>src/test/java/samples</source>
+                    </sources>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>extract</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+            <resource>
+                <filtering>true</filtering>
+                <directory>${project.basedir}/src/main/site</directory>
+                <includes>
+                    <include>README.md</include>
+                </includes>
+                <targetPath>${project.basedir}</targetPath>
+            </resource>
+        </resources>
     </build>
     <licenses>
         <license>
